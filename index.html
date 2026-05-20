@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEDIA · Acompañamientos Individualizados</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --c-bg: #f5f4f0;
+    --c-surface: #ffffff;
+    --c-surface2: #f0ede8;
+    --c-border: #e2ddd6;
+    --c-border-light: #ece9e3;
+    --c-text: #1a1714;
+    --c-text-2: #6b6560;
+    --c-text-3: #a39e98;
+    --c-accent: #c8522a;
+    --c-accent-light: #f5ede8;
+    --c-accent-dark: #a03e1c;
+    --c-ok: #2a7a4b;
+    --c-ok-bg: #eaf5ee;
+    --c-warn: #9a6b1a;
+    --c-warn-bg: #fdf3e0;
+    --c-danger: #b33030;
+    --c-danger-bg: #fceaea;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--c-text);
+    color: #fff;
+    padding: 0 2rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-logo {
+    width: 32px; height: 32px;
+    background: var(--c-accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 13px; letter-spacing: 0.02em;
+  }
+  .header-title { font-size: 15px; font-weight: 500; }
+  .header-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-left: 8px; }
+
+  /* LAYOUT */
+  .main { max-width: 1280px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 4px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius);
+    padding: 4px;
+    margin-bottom: 1.5rem;
+    width: fit-content;
+  }
+  .tab {
+    padding: 6px 18px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none; background: none;
+    color: var(--c-text-2); border-radius: 7px;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--c-text); }
+  .tab.active { background: var(--c-text); color: #fff; }
+
+  /* PANEL */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* STATS */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px; margin-bottom: 1.5rem;
+  }
+  .stat {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c-text-3); margin-bottom: 6px; }
+  .stat-val { font-size: 28px; font-weight: 600; line-height: 1; }
+  .stat-val.warn { color: var(--c-warn); }
+  .stat-val.ok { color: var(--c-ok); }
+
+  /* ALERTAS INTEGRADORES */
+  .section-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--c-text-3); margin-bottom: 10px; font-weight: 500;
+  }
+  .alert-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 8px; margin-bottom: 1.5rem;
+  }
+  .alert-chip {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px; border-radius: var(--radius-sm);
+    font-size: 12px; font-weight: 500; gap: 8px;
+  }
+  .chip-ok { background: var(--c-ok-bg); color: var(--c-ok); }
+  .chip-warn { background: var(--c-warn-bg); color: var(--c-warn); }
+  .chip-num { font-family: 'DM Mono', monospace; font-size: 11px; opacity: 0.85; }
+
+  /* CARDS INTEGRADORES */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+  }
+  .icard {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+  .icard.alerta { border-color: #e8c97a; }
+  .icard-head {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 10px;
+  }
+  .icard-name-row { display: flex; align-items: center; gap: 8px; }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--c-accent-light);
+    color: var(--c-accent);
+    font-size: 11px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .icard-name { font-size: 13px; font-weight: 600; }
+  .badge {
+    font-size: 11px; font-weight: 500;
+    padding: 2px 8px; border-radius: 20px;
+  }
+  .badge-ok { background: var(--c-ok-bg); color: var(--c-ok); }
+  .badge-warn { background: var(--c-warn-bg); color: var(--c-warn); }
+  .icard-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 6px; align-items: center;
+    font-size: 12px; padding: 5px 0;
+    border-top: 1px solid var(--c-border-light);
+  }
+  .icard-row .exp { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--c-text-3); }
+  .sex-badge {
+    font-size: 10px; padding: 1px 5px; border-radius: 10px;
+    font-weight: 500;
+  }
+  .sex-h { background: #e8f0fc; color: #2a5298; }
+  .sex-m { background: #fce8f5; color: #8a2a6a; }
+  .sex-o { background: var(--c-surface2); color: var(--c-text-2); }
+  .vacant { font-size: 11px; color: var(--c-text-3); font-style: italic; padding: 4px 0; border-top: 1px solid var(--c-border-light); }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    align-items: center; margin-bottom: 1rem;
+  }
+  .toolbar input, .toolbar select {
+    font-family: inherit; font-size: 13px;
+    padding: 7px 12px; height: 34px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    background: var(--c-surface);
+    color: var(--c-text);
+    outline: none;
+  }
+  .toolbar input { flex: 1; min-width: 200px; }
+  .toolbar input:focus, .toolbar select:focus { border-color: var(--c-accent); }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  th {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--c-text-3); font-weight: 500;
+    padding: 10px 14px; text-align: left;
+    background: var(--c-surface2);
+    border-bottom: 1px solid var(--c-border);
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--c-border-light);
+    color: var(--c-text);
+    max-width: 180px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--c-surface2); }
+  .mono { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--c-text-2); }
+  .estado-badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500;
+  }
+  .e-activo { background: var(--c-ok-bg); color: var(--c-ok); }
+  .e-cerrado { background: var(--c-surface2); color: var(--c-text-2); }
+
+  /* FORM */
+  .form-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    max-width: 800px;
+  }
+  .form-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 1.25rem; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .field label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--c-text-2); font-weight: 500;
+    display: block; margin-bottom: 5px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%; font-family: inherit; font-size: 13px;
+    padding: 8px 10px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    background: var(--c-bg);
+    color: var(--c-text); outline: none;
+    transition: border 0.15s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--c-accent); background: #fff; }
+  .field textarea { height: 70px; resize: vertical; }
+  .form-actions { display: flex; gap: 8px; margin-top: 4px; }
+  .btn-primary {
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    padding: 8px 20px; cursor: pointer;
+    background: var(--c-accent); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    transition: background 0.15s;
+  }
+  .btn-primary:hover { background: var(--c-accent-dark); }
+  .btn-ghost {
+    font-family: inherit; font-size: 13px;
+    padding: 8px 16px; cursor: pointer;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    background: none; color: var(--c-text-2);
+  }
+  .btn-ghost:hover { color: var(--c-text); border-color: var(--c-text-2); }
+  .msg { font-size: 13px; margin-top: 10px; padding: 8px 12px; border-radius: var(--radius-sm); }
+  .msg-ok { background: var(--c-ok-bg); color: var(--c-ok); }
+  .msg-err { background: var(--c-danger-bg); color: var(--c-danger); }
+  .msg-warn { background: var(--c-warn-bg); color: var(--c-warn); }
+  .del-btn {
+    font-size: 11px; padding: 2px 8px;
+    border: 1px solid var(--c-border); border-radius: 4px;
+    background: none; color: var(--c-text-3); cursor: pointer;
+  }
+  .del-btn:hover { color: var(--c-danger); border-color: var(--c-danger); }
+  .empty-msg { text-align: center; padding: 3rem; color: var(--c-text-3); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="header-logo">CD</div>
+    <span class="header-title">CEDIA</span>
+    <span class="header-sub">Acompañamientos Individualizados</span>
+  </div>
+</header>
+
+<div class="main">
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('resumen')">Resumen</button>
+    <button class="tab" onclick="showTab('registro')">Registro</button>
+    <button class="tab" onclick="showTab('nuevo')">Añadir</button>
+  </div>
+
+  <!-- RESUMEN -->
+  <div id="tab-resumen" class="panel active">
+    <div class="stats-row" id="stats-row"></div>
+    <div class="section-title">Estado por integrador/a</div>
+    <div class="alert-grid" id="alert-grid"></div>
+    <div class="section-title">Asignaciones</div>
+    <div class="cards-grid" id="cards-grid"></div>
+  </div>
+
+  <!-- REGISTRO -->
+  <div id="tab-registro" class="panel">
+    <div class="toolbar">
+      <input type="text" id="search-input" placeholder="Buscar por expediente, nombre, apellido o integrador…" oninput="renderTabla()">
+      <select id="filter-estado" onchange="renderTabla()">
+        <option value="">Todos los estados</option>
+        <option value="Activo">Activo</option>
+        <option value="Cerrado">Cerrado</option>
+      </select>
+      <select id="filter-integ" onchange="renderTabla()">
+        <option value="">Todos los integradores</option>
+      </select>
+      <select id="filter-sexo" onchange="renderTabla()">
+        <option value="">Todos</option>
+        <option value="Hombre">Hombres</option>
+        <option value="Mujer">Mujeres</option>
+        <option value="Otro">Otro</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Expediente</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Sexo</th>
+            <th>Integrador/a</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Estado</th>
+            <th>Observaciones</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tabla-body"></tbody>
+      </table>
+      <div id="tabla-empty" class="empty-msg" style="display:none">Sin resultados para esta búsqueda.</div>
+    </div>
+  </div>
+
+  <!-- NUEVO -->
+  <div id="tab-nuevo" class="panel">
+    <div class="form-card">
+      <h3>Nuevo acompañamiento</h3>
+      <div class="form-grid">
+        <div class="field"><label>Expediente *</label><input type="text" id="f-exp" placeholder="EXP-001"></div>
+        <div class="field"><label>Nombre *</label><input type="text" id="f-nombre"></div>
+        <div class="field"><label>Apellido *</label><input type="text" id="f-apellido"></div>
+      </div>
+      <div class="form-grid-4">
+        <div class="field"><label>Sexo *</label>
+          <select id="f-sexo">
+            <option value="">— selecciona —</option>
+            <option value="Hombre">Hombre</option>
+            <option value="Mujer">Mujer</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="field"><label>Integrador/a *</label>
+          <select id="f-integ"><option value="">— selecciona —</option></select>
+        </div>
+        <div class="field"><label>Fecha inicio *</label><input type="date" id="f-inicio"></div>
+        <div class="field"><label>Fecha fin</label><input type="date" id="f-fin"></div>
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label>Observaciones</label>
+        <textarea id="f-obs" placeholder="Notas sobre el acompañamiento…"></textarea>
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label>Estado</label>
+        <select id="f-estado" style="width:auto;min-width:160px">
+          <option value="Activo">Activo</option>
+          <option value="Cerrado">Cerrado</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" onclick="guardar()">Guardar</button>
+        <button class="btn-ghost" onclick="limpiarForm()">Limpiar</button>
+      </div>
+      <div id="form-msg" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'cedia_acompanamientos_v1';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxb-dFCZ0SCa1QHmzSc44T77l-nGXkvHomUNCT2NSHbfUcYbTxpKcsUu_Jm3ajXe87o/exec';
+
+function enviarASheets(registro) {
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(registro)
+  }).catch(err => console.log('Error enviando a Sheets:', err));
+}
+
+const INTEGRADORES = [
+  {nombre:"Esther",    max:2},
+  {nombre:"Ares",      max:5},
+  {nombre:"Alejandro", max:5},
+  {nombre:"Mirian",    max:5},
+  {nombre:"Coral",     max:5},
+  {nombre:"Belinda",   max:5},
+  {nombre:"Cristian",  max:5},
+  {nombre:"Loli",      max:5},
+  {nombre:"Esteban",   max:5},
+  {nombre:"José Luis", max:5},
+  {nombre:"Georgina",  max:5},
+  {nombre:"Adrián",    max:5},
+  {nombre:"Karina",    max:5},
+  {nombre:"Felipe",    max:5},
+  {nombre:"Gema",      max:5},
+  {nombre:"Violeta",   max:5},
+];
+
+// PERSISTENCIA
+function cargarDatos() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : { datos: [], nextId: 1 };
+  } catch(e) { return { datos: [], nextId: 1 }; }
+}
+function guardarDatos() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ datos, nextId }));
+}
+
+let { datos, nextId } = cargarDatos();
+
+// HELPERS
+function fmt(d) {
+  if (!d) return '—';
+  const [y,m,dd] = d.split('-');
+  return `${dd}/${m}/${y}`;
+}
+function activosPor(nombre) {
+  return datos.filter(d => d.integrador === nombre && d.estado === 'Activo').length;
+}
+function maxFor(nombre) {
+  const i = INTEGRADORES.find(i => i.nombre === nombre);
+  return i ? i.max : 5;
+}
+function initiales(nombre) {
+  return nombre.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+}
+
+// RENDER STATS
+function renderStats() {
+  const activos = datos.filter(d => d.estado === 'Activo').length;
+  const cerrados = datos.filter(d => d.estado === 'Cerrado').length;
+  const conAlerta = INTEGRADORES.filter(i => activosPor(i.nombre) < i.max).length;
+  const completos = INTEGRADORES.filter(i => activosPor(i.nombre) >= i.max).length;
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat"><div class="stat-label">Personas activas</div><div class="stat-val">${activos}</div></div>
+    <div class="stat"><div class="stat-label">Cerrados</div><div class="stat-val">${cerrados}</div></div>
+    <div class="stat"><div class="stat-label">Integradores completos</div><div class="stat-val ok">${completos}</div></div>
+    <div class="stat"><div class="stat-label">Con plazas vacantes</div><div class="stat-val ${conAlerta > 0 ? 'warn' : 'ok'}">${conAlerta}</div></div>
+  `;
+}
+
+// RENDER ALERTAS
+function renderAlerts() {
+  document.getElementById('alert-grid').innerHTML = INTEGRADORES.map(i => {
+    const n = activosPor(i.nombre);
+    const ok = n >= i.max;
+    return `<div class="alert-chip ${ok ? 'chip-ok' : 'chip-warn'}">
+      <span>${i.nombre}</span>
+      <span class="chip-num">${n}/${i.max}</span>
+    </div>`;
+  }).join('');
+}
+
+// RENDER CARDS
+function renderCards() {
+  document.getElementById('cards-grid').innerHTML = INTEGRADORES.map(i => {
+    const personas = datos.filter(d => d.integrador === i.nombre && d.estado === 'Activo');
+    const n = personas.length;
+    const ok = n >= i.max;
+    const vacantes = Math.max(0, i.max - n);
+    return `<div class="icard${ok ? '' : ' alerta'}">
+      <div class="icard-head">
+        <div class="icard-name-row">
+          <div class="avatar">${initiales(i.nombre)}</div>
+          <span class="icard-name">${i.nombre}</span>
+        </div>
+        <span class="badge ${ok ? 'badge-ok' : 'badge-warn'}">${n}/${i.max}</span>
+      </div>
+      ${personas.map(p => `
+        <div class="icard-row">
+          <span>${p.nombre} ${p.apellido}</span>
+          <span class="exp">${p.exp}</span>
+          <span class="sex-badge ${p.sexo==='Hombre'?'sex-h':p.sexo==='Mujer'?'sex-m':'sex-o'}">${p.sexo==='Hombre'?'H':p.sexo==='Mujer'?'M':'O'}</span>
+        </div>`).join('')}
+      ${Array(vacantes).fill(0).map(() => `<div class="vacant">— plaza vacante —</div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+// RENDER TABLA
+function renderTabla() {
+  const q = (document.getElementById('search-input').value || '').toLowerCase();
+  const fe = document.getElementById('filter-estado').value;
+  const fi = document.getElementById('filter-integ').value;
+  const fs = document.getElementById('filter-sexo').value;
+  const rows = datos.filter(d => {
+    const match = !q || (d.exp + d.nombre + d.apellido + d.integrador).toLowerCase().includes(q);
+    return match && (!fe || d.estado === fe) && (!fi || d.integrador === fi) && (!fs || d.sexo === fs);
+  });
+  const body = document.getElementById('tabla-body');
+  const empty = document.getElementById('tabla-empty');
+  if (!rows.length) { body.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  body.innerHTML = rows.map(d => `
+    <tr>
+      <td class="mono">${d.exp}</td>
+      <td>${d.nombre}</td>
+      <td>${d.apellido}</td>
+      <td><span class="sex-badge ${d.sexo==='Hombre'?'sex-h':d.sexo==='Mujer'?'sex-m':'sex-o'}">${d.sexo}</span></td>
+      <td>${d.integrador}</td>
+      <td class="mono">${fmt(d.inicio)}</td>
+      <td class="mono">${fmt(d.fin)}</td>
+      <td><span class="estado-badge ${d.estado==='Activo'?'e-activo':'e-cerrado'}">${d.estado}</span></td>
+      <td title="${d.obs||''}">${d.obs || '—'}</td>
+      <td><button class="del-btn" onclick="eliminar(${d.id})">Eliminar</button></td>
+    </tr>`).join('');
+}
+
+function poblarFiltros() {
+  const sel = document.getElementById('filter-integ');
+  const actual = sel.value;
+  sel.innerHTML = '<option value="">Todos los integradores</option>' +
+    INTEGRADORES.map(i => `<option value="${i.nombre}"${i.nombre===actual?' selected':''}>${i.nombre}</option>`).join('');
+
+  const fsel = document.getElementById('f-integ');
+  fsel.innerHTML = '<option value="">— selecciona —</option>' +
+    INTEGRADORES.map(i => `<option value="${i.nombre}">${i.nombre} (máx. ${i.max})</option>`).join('');
+}
+
+// GUARDAR NUEVO
+function guardar() {
+  const exp = document.getElementById('f-exp').value.trim();
+  const nombre = document.getElementById('f-nombre').value.trim();
+  const apellido = document.getElementById('f-apellido').value.trim();
+  const sexo = document.getElementById('f-sexo').value;
+  const integrador = document.getElementById('f-integ').value;
+  const inicio = document.getElementById('f-inicio').value;
+  const fin = document.getElementById('f-fin').value;
+  const estado = document.getElementById('f-estado').value;
+  const obs = document.getElementById('f-obs').value.trim();
+  const msg = document.getElementById('form-msg');
+
+  if (!exp || !nombre || !apellido || !sexo || !integrador || !inicio) {
+    showMsg('msg-err', 'Rellena todos los campos obligatorios (*).');
+    return;
+  }
+  const mx = maxFor(integrador);
+  const actuales = activosPor(integrador);
+  if (estado === 'Activo' && actuales >= mx) {
+    showMsg('msg-warn', `${integrador} ya tiene ${mx} persona${mx===1?'':'s'} activa${mx===1?'':'s'} asignada${mx===1?'':'s'} (límite alcanzado).`);
+    return;
+  }
+  const registro = { id: nextId++, exp, nombre, apellido, sexo, integrador, inicio, fin, estado, obs };
+  datos.push(registro);
+  guardarDatos();
+  enviarASheets(registro);
+  limpiarForm();
+  showMsg('msg-ok', 'Registro guardado correctamente.');
+  setTimeout(() => { document.getElementById('form-msg').style.display = 'none'; }, 3000);
+  renderAll();
+}
+
+function showMsg(cls, txt) {
+  const el = document.getElementById('form-msg');
+  el.className = 'msg ' + cls;
+  el.textContent = txt;
+  el.style.display = 'block';
+}
+
+function limpiarForm() {
+  ['f-exp','f-nombre','f-apellido','f-inicio','f-fin','f-obs'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-sexo').value = '';
+  document.getElementById('f-integ').value = '';
+  document.getElementById('f-estado').value = 'Activo';
+}
+
+function eliminar(id) {
+  if (!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')) return;
+  datos = datos.filter(d => d.id !== id);
+  guardarDatos();
+  renderAll();
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['resumen','registro','nuevo'][i] === name);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function renderAll() {
+  renderStats();
+  renderAlerts();
+  renderCards();
+  renderTabla();
+  poblarFiltros();
+}
+
+renderAll();
+</script>
+</body>
+</html>
