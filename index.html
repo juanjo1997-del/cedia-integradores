@@ -284,9 +284,26 @@
   }
   .del-btn:hover { color: var(--c-danger); border-color: var(--c-danger); }
   .empty-msg { text-align: center; padding: 3rem; color: var(--c-text-3); font-size: 14px; }
+  #loading-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(245,244,240,0.85);
+    z-index: 999; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px;
+  }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--c-border);
+    border-top-color: var(--c-accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: var(--c-text-2); }
 </style>
 </head>
 <body>
+
+<div id="loading-overlay"><div class="spinner"></div><div class="loading-text">Cargando datos…</div></div>
 
 <header>
   <div class="header-left">
@@ -399,7 +416,7 @@
 
 <script>
 const STORAGE_KEY = 'cedia_acompanamientos_v1';
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxb-dFCZ0SCa1QHmzSc44T77l-nGXkvHomUNCT2NSHbfUcYbTxpKcsUu_Jm3ajXe87o/exec';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzgNamYkumjw95fxiwzUqlbriRCWHA8VQepOCKN67fvMBXDgw1y1cplLjlgt31M3Yo_/exec';
 
 function enviarASheets(registro) {
   fetch(SHEETS_URL, {
@@ -430,17 +447,73 @@ const INTEGRADORES = [
 ];
 
 // PERSISTENCIA
-function cargarDatos() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : { datos: [], nextId: 1 };
-  } catch(e) { return { datos: [], nextId: 1 }; }
-}
 function guardarDatos() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ datos, nextId }));
 }
 
-let { datos, nextId } = cargarDatos();
+function mostrarCargando(visible) {
+  document.getElementById('loading-overlay').style.display = visible ? 'flex' : 'none';
+}
+
+async function cargarDesdeSheets() {
+  mostrarCargando(true);
+  try {
+    const res = await fetch(SHEETS_URL + '?ts=' + Date.now());
+    const json = await res.json();
+    const filas = json.data;
+    if (!filas || filas.length < 2) { mostrarCargando(false); return; }
+    const headers = filas[0];
+    datos = [];
+    let maxId = 0;
+    for (let i = 1; i < filas.length; i++) {
+      const f = filas[i];
+      if (!f[0]) continue;
+      const id = parseInt(f[0]) || i;
+      if (id > maxId) maxId = id;
+      datos.push({
+        id: id,
+        exp: f[1] || '',
+        nombre: f[2] || '',
+        apellido: f[3] || '',
+        sexo: f[4] || '',
+        integrador: f[5] || '',
+        inicio: convertirFecha(f[6]),
+        fin: convertirFecha(f[7]),
+        estado: f[8] || 'Activo',
+        obs: f[9] || ''
+      });
+    }
+    nextId = maxId + 1;
+    guardarDatos();
+  } catch(e) {
+    console.log('Error cargando Sheets, usando localStorage:', e);
+    const local = localStorage.getItem(STORAGE_KEY);
+    if (local) {
+      const parsed = JSON.parse(local);
+      datos = parsed.datos || [];
+      nextId = parsed.nextId || 1;
+    }
+  }
+  mostrarCargando(false);
+  renderAll();
+}
+
+function convertirFecha(val) {
+  if (!val) return '';
+  if (typeof val === 'string' && val.match(/^\d{4}-\d{2}-\d{2}$/)) return val;
+  if (typeof val === 'string' && val.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+    const [d,m,y] = val.split('/');
+    return `${y}-${m}-${d}`;
+  }
+  try {
+    const d = new Date(val);
+    if (!isNaN(d)) return d.toISOString().split('T')[0];
+  } catch(e) {}
+  return '';
+}
+
+let datos = [];
+let nextId = 1;
 
 // HELPERS
 function fmt(d) {
@@ -621,7 +694,8 @@ function renderAll() {
   poblarFiltros();
 }
 
-renderAll();
+initSelectIntegradores();
+cargarDesdeSheets();
 </script>
 </body>
 </html>
