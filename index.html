@@ -455,14 +455,26 @@ function mostrarCargando(visible) {
   document.getElementById('loading-overlay').style.display = visible ? 'flex' : 'none';
 }
 
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSB7jq-fS5c9c3BC9clO-VQT8tFuVVksBvKjc_vD78AelcXXnep0WWBgw_xPLRaH3EHp3eXR3L7kzjf/pub?gid=0&single=true&output=csv';
+
 async function cargarDesdeSheets() {
   mostrarCargando(true);
   try {
-    const res = await fetch(SHEETS_URL + '?ts=' + Date.now());
-    const json = await res.json();
-    const filas = json.data;
-    if (!filas || filas.length < 2) { mostrarCargando(false); return; }
-    const headers = filas[0];
+    const res = await fetch(CSV_URL + '&ts=' + Date.now());
+    const text = await res.text();
+    const filas = text.trim().split('\n').map(row => {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let c of row) {
+        if (c === '"') { inQuotes = !inQuotes; }
+        else if (c === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+        else { current += c; }
+      }
+      result.push(current.trim());
+      return result;
+    });
+    if (filas.length < 2) { mostrarCargando(false); renderAll(); return; }
     datos = [];
     let maxId = 0;
     for (let i = 1; i < filas.length; i++) {
@@ -486,7 +498,7 @@ async function cargarDesdeSheets() {
     nextId = maxId + 1;
     guardarDatos();
   } catch(e) {
-    console.log('Error cargando Sheets, usando localStorage:', e);
+    console.log('Error cargando CSV, usando localStorage:', e);
     const local = localStorage.getItem(STORAGE_KEY);
     if (local) {
       const parsed = JSON.parse(local);
