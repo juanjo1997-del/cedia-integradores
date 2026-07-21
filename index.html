@@ -416,7 +416,17 @@
 
 <script>
 const STORAGE_KEY = 'cedia_acompanamientos_v1';
+const BORRADOS_KEY = 'cedia_borrados_v1';
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzgNamYkumjw95fxiwzUqlbriRCWHA8VQepOCKN67fvMBXDgw1y1cplLjlgt31M3Yo_/exec';
+
+function getBorrados() {
+  try { return JSON.parse(localStorage.getItem(BORRADOS_KEY)) || []; } catch(e) { return []; }
+}
+function addBorrado(id) {
+  const b = getBorrados();
+  if (!b.includes(id)) b.push(id);
+  localStorage.setItem(BORRADOS_KEY, JSON.stringify(b));
+}
 
 function enviarASheets(registro) {
   fetch(SHEETS_URL, {
@@ -495,6 +505,13 @@ async function cargarDesdeSheets() {
         obs: f[9] || ''
       });
     }
+    // Ocultar los que ya se han borrado en este equipo, por si el CSV publicado
+    // tarda unos minutos en actualizarse. Se limpian solos cuando desaparecen de la hoja.
+    let borrados = getBorrados();
+    const idsEnHoja = new Set(datos.map(d => d.id));
+    borrados = borrados.filter(bid => idsEnHoja.has(bid));
+    localStorage.setItem(BORRADOS_KEY, JSON.stringify(borrados));
+    datos = datos.filter(d => !borrados.includes(d.id));
     nextId = maxId + 1;
     guardarDatos();
   } catch(e) {
@@ -684,7 +701,16 @@ function limpiarForm() {
 }
 
 function eliminar(id) {
-  if (!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')) return;
+  if (!confirm('¿Eliminar este registro? Se borrará también de la hoja de datos y no se puede deshacer.')) return;
+  // Borrar en Google Sheets
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'eliminar', id: id })
+  }).catch(err => console.log('Error borrando en Sheets:', err));
+  // Borrar en local y recordar el borrado
+  addBorrado(id);
   datos = datos.filter(d => d.id !== id);
   guardarDatos();
   renderAll();
